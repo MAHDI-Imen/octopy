@@ -91,3 +91,27 @@ print(actions.shape)
 print(loss)
 ``` 
 
+## Acknowledgements
+
+Most of the code is based on the [Octo Codebase](https://github.com/octo-models/octo) and [Hiveformer](https://github.com/vlc-robot/hiveformer) and has just been adapted.
+Thus, if you find this usefull, please cite their work:
+
+```
+@misc{octo_2023,
+    title={Octo: An Open-Source Generalist Robot Policy},
+    author = {{Octo Model Team} and Dibya Ghosh and Homer Walke and Karl Pertsch and Kevin Black and Oier Mees and Sudeep Dasari and Joey Hejna and Charles Xu and Jianlan Luo and Tobias Kreiman and {You Liang} Tan and Dorsa Sadigh and Chelsea Finn and Sergey Levine},
+    howpublished  = {\url{https://octo-models.github.io}},
+    year = {2023},
+}
+@misc{guhur2022instructiondrivenhistoryawarepoliciesrobotic,
+      title={Instruction-driven history-aware policies for robotic manipulations}, 
+      author={Pierre-Louis Guhur and Shizhe Chen and Ricardo Garcia and Makarand Tapaswi and Ivan Laptev and Cordelia Schmid},
+      year={2022},
+      eprint={2209.04899},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2209.04899}, 
+}
+```
+
+--- 
