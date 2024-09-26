@@ -1,6 +1,15 @@
 # pyocto
 Pytorch Implementation of Octo for RLBench.
 
+To run evaluations on RLBench make sure to look at instructions in [PyRep](https://github.com/stepjam/PyRep) and [RLBench](https://github.com/stepjam/RLBench) to install RLBench simulator (with VirtualGL in headless machines). Use the modified version of [RLBench](https://github.com/rjgpinel/RLBench) to support additional tasks.
+
+To load the pretrained weights, make sure to install octo in your environment. 
+Make sure to install the dependencies from the [octo repository](https://github.com/octo-models/octo). Then run the following command to install octo.
+    
+```bash
+pip install git+https://github.com/octo-models/octo
+```
+
 ## Octo Backbone
 You can simply use the Octo backbone with the pretrained weights as follows:
 

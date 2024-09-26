@@ -9,3 +9,4 @@ msgpack_numpy
 lmdb
 wandb
 tqdm
+omegaconf
