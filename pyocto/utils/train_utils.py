@@ -2,6 +2,7 @@ import torch
 from torch.optim import AdamW
 from omegaconf import OmegaConf
 from pyocto.utils.transfer_weights import load_octo_backbone_weights
+from pyocto.utils.data_utils import extract_input
 
 
 def convert_params(num_params):
@@ -69,7 +70,7 @@ def set_up_scheduler(optimizer, epochs):
     scheduler = torch.optim.lr_scheduler.SequentialLR(
         optimizer,
         schedulers=[warmup_scheduler, cosine_annealing_scheduler],
-        milestones=[20],
+        milestones=[3],
     )
 
     return scheduler
@@ -87,11 +88,12 @@ def set_up_logging(config, model, PROJECT_NAME, RUN_NAME, LOGGING_MODE):
     wandb.watch(model)
 
 
-def train_epoch(model, optimizer, data_loader):
+def train_epoch(model, optimizer, data_loader, task_desc):
     average_losses = {}
     model.train()
 
     for batch in data_loader:
+        batch = extract_input(batch, task_desc)
         losses, actions = model(batch, compute_loss=True)
         optimizer.zero_grad()
         losses["total"].backward()

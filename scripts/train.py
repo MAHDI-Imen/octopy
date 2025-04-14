@@ -11,7 +11,6 @@ from tqdm import tqdm
 from pyocto.model import PyOcto
 from pyocto.utils.eval_utils import evaluate
 from pyocto.environement import set_up_rlbench_env
-from pyocto.data.dataset import KeystepDataset, stepwise_collate_fn
 from pyocto.utils.train_utils import (
     convert_params,
     setup_model_training_strategy,
@@ -20,6 +19,23 @@ from pyocto.utils.train_utils import (
     set_up_logging,
     train_epoch,
 )
+
+from tapas_gmm.behavior_cloning import (
+    BCDataConfig,
+    DataLoaderConfig,
+)
+from tapas_gmm.dataset.bc_keypose_cached import BCKeyPoseCachedDataset as Dataset
+from tapas_gmm.utils.observation import ObservationConfig, MaskTypes
+from conf._machine import data_naming_config
+
+from tapas_gmm.utils.misc import (
+    load_scene_data,
+)
+from tapas_gmm.utils.data_loading import (
+    DataLoaderConfig,
+    build_infinte_data_iterators,
+)
+from tapas_gmm.utils.observation import collate
 
 
 def main(config: DictConfig):
@@ -32,7 +48,7 @@ def main(config: DictConfig):
     EPOCHS = config["training"]["epochs"]
     BATCH_SIZE = config["training"]["batch_size"]
 
-    DATA_DIR = config["data"]["data_dir"]
+    TASK = config["data"]["task"]
     TASKVARS = config["data"]["taskvars"]
     CAMERAS = config["data"]["cameras"]
     TASK_DESC = config["data"]["task_desc"]
@@ -85,23 +101,28 @@ def main(config: DictConfig):
     # Load the dataset
     ############################################################################
     print("Loading dataset", flush=True)
-    dataset = KeystepDataset(
-        DATA_DIR,
-        TASKVARS,
+
+    data_naming = data_naming_config
+    data_naming.task = config["data"]["task"]
+    data_naming.feedback_type = config["data"]["feedback_type"]
+    scene_data = load_scene_data(data_naming)
+
+    bc_data = BCDataConfig(
+        fragment_length=1,
         cameras=CAMERAS,
-        is_training=True,
-        task_desc=TASK_DESC,
-        resize=RESIZE,
+        mask_type=MaskTypes.GT,
+        subsample_to_common_length=True,
     )
+    bc_data = Dataset(scene_data, bc_data)
 
     data_loader = DataLoader(
-        dataset,
+        bc_data,
         batch_size=BATCH_SIZE,
-        collate_fn=stepwise_collate_fn,
         shuffle=True,
+        collate_fn=collate,
     )
 
-    print(f"Number of keypoints: {len(dataset)}", flush=True)
+    print(f"Number of keypoints: {len(bc_data)}", flush=True)
     print(f"Number of batches: {len(data_loader)}", flush=True)
 
     ############################################################################
@@ -131,7 +152,7 @@ def main(config: DictConfig):
 
     for epoch in pbar:
         logs = {}
-        average_losses = train_epoch(model, optimizer, data_loader)
+        average_losses = train_epoch(model, optimizer, data_loader, TASK_DESC)
         logs.update(average_losses)
         pbar.set_description(f"Epoch {epoch} | Loss: {average_losses['total']:.4f}")
 
@@ -148,6 +169,7 @@ def main(config: DictConfig):
                 TASKVARS,
                 CAMERAS,
                 RESIZE,
+                TASK_DESC,
             )
             for task_name, result in results.items():
                 logs.update({task_name: result})
@@ -165,6 +187,6 @@ def main(config: DictConfig):
 
 
 if __name__ == "__main__":
-    config_path = "scripts/configs/config.yaml"
+    config_path = "pyocto/scripts/configs/config.yaml"
     config = OmegaConf.load(config_path)
     main(config)

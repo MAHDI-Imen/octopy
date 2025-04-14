@@ -21,14 +21,12 @@ class PyOcto(nn.Module):
             decoder_features=self.backbone.decoder_features[0],
             decoder_out_features=self.backbone.decoder_features[1],
             latent_im_size=self.backbone.latent_im_size,
-            max_steps=20,
             num_cameras=3,
         )
 
     def forward(self, batch, compute_loss=False, return_heatmaps=False):
         """Input batch contains:
         - rgbs, pcds: (B, N, C, H, W) B: batch_size, N: #cameras
-        - step_ids: (B, )
         - task_desc: (B, ) list of strings
         """
 
@@ -37,14 +35,12 @@ class PyOcto(nn.Module):
         rgb_obs = batch["rgbs"]
         pc_obs = batch["pcds"]
         text_input = batch["task_desc"]
-        step_ids = batch["step_ids"]
 
         transformer_output = self.backbone(text_input, rgb_obs)
 
         actions, xt_heatmap = self.action_head(
             transformer_output,
             pc_obs,
-            step_ids,
         )
 
         if compute_loss:
@@ -126,7 +122,6 @@ if __name__ == "__main__":
         "pcds": torch.randn(2, 3, 3, 256, 256),
         "task_desc": ["pick up the object", "place the object"],
         "actions": torch.randn(2, 8),
-        "step_ids": torch.randint(0, 10, (2,)),
     }
 
     loss, actions = model(batch, compute_loss=True)

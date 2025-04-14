@@ -1,31 +1,32 @@
 training: 
     strategy: finetune  # action_head finetune or scratch
-    pretrained_path: hf://rail-berkeley/octo-small-1.5  # change it if cluster node does not have internet access and use locally saved files
-    batch_size: 32
+    pretrained_path: /home/mahdi/.cache/huggingface/hub/models--rail-berkeley--octo-small-1.5/snapshots/dc9aa3019f764726c770814b27e4ab0fc6e32a58  # change it if cluster node does not have internet access and use locally saved files
+    batch_size: 1
     lr: 1e-5
     backbone_lr: 1e-7
-    epochs: 2000
+    epochs: 50
 
 data: 
-    data_dir: /path/to/keysteps/dataset/
-    taskvars: [reach_target+0, pick_up_cup+0]
+    task: "OpenDrawer"
+    taskvars: ["open_drawer+0"]
+    task_desc: "Open the drawer"
+    feedback_type: "demos_arp"
     cameras: [left_shoulder, right_shoulder, wrist]
-    task_desc: /pyocto/data/tasks.csv
     image_size: 256
 
 logging: 
-    project_name: pyocto
-    run_name: test
-    mode: offline  # offline online helps in case the cluster node does not have internet access
-    wandb: False
+    project_name: arp
+    run_name: arp
+    mode: online  # offline online helps in case the cluster node does not have internet access
+    wandb: True
 
 checkpoints: 
-    save_dir: /path/to/save/checkpoints/
-    save_rate: 200
+    save_dir: checkpoints/
+    save_rate: 10
 
 evaluation: 
     evaluate: True
-    evaluation_rate: 200  # every n epochs
+    evaluation_rate: 10  # every n epochs
     seed: 200  # seed to generate evaluation episodes
-    num_episodes: 100
-    max_steps: 20
+    num_episodes: 20
+    max_steps: 5

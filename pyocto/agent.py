@@ -18,12 +18,11 @@ class Agent(object):
         self.cameras = cameras
         self.resize = resize
 
-    def predict_action(self, observation, task: str, step=int, return_batch=False):
+    def predict_action(self, observation, task: str, return_batch=False):
         """
         Args:
             observation: RLBnech observation at step t. Must include camera views specified at initialization as well as their respective point clouds.
             task: text description of the task
-            step: indice of curent timestep
             return_batch: whether or not to return the batch with heatmaps predicted included.
         Returns:
             action: predicted action as an 8D tensor.
@@ -32,32 +31,31 @@ class Agent(object):
         """
         self.policy.eval()
         device = next(self.policy.parameters()).device
-        batch = self.get_batch(observation, task, step)
+        batch = self.get_batch(observation, task)
         for key in batch:
             if isinstance(batch[key], torch.Tensor):
                 batch[key] = batch[key].to(device)
         action, heatmaps = self.policy(batch, return_heatmaps=True)
-
+        # action last dim should be 1 if positive and 0 if negative
+        action[0, -1] = action[0, -1] > 0.0
         batch["heatmaps"] = heatmaps
         if return_batch:
             return action[0], batch
 
         return action[0]
 
-    def get_batch(self, observation, task: str, step=int):
-        rgbs = self._extract_visual_input(observation, "rgb")
+    def get_batch(self, observation, task: str):
+        rgbs = self._extract_visual_input(observation, "rgb", normalize=True)
         pcds = self._extract_visual_input(observation, "point_cloud")
-        step_ids = torch.tensor([step])
         task_desc = [task]
         batch = {
             "rgbs": rgbs,
             "pcds": pcds,
-            "step_ids": step_ids,
             "task_desc": task_desc,
         }
         return batch
 
-    def _extract_visual_input(self, observation, visual_input: str):
+    def _extract_visual_input(self, observation, visual_input: str, normalize=True):
         visuals = [
             getattr(observation, f"{cam}_{visual_input}") for cam in self.cameras
         ]
@@ -67,6 +65,9 @@ class Agent(object):
 
         # resize to 256x256
         visuals = einops.rearrange(visuals, "t n c h w -> (t n) c h w")
+        if normalize:
+            # normalize to 0,1 range
+            visuals = visuals / 255
 
         visuals = transforms_f.resize(
             visuals, (256, 256), transforms.InterpolationMode.BILINEAR

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="octopy",
+    name="pyocto",
     version="1.0",
     description="Pytorch implementation of octo model",
     author="Imen Mahdi",

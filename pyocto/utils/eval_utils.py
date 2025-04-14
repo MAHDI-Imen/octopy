@@ -5,7 +5,9 @@ from pyocto.environement import run_episode
 from pyocto.environement import set_up_rlbench_env, get_task_from_task_name
 
 
-def evaluate(env, model, seed, NUM_EPISODES, MAX_STEPS, TASKVARS, CAMERAS, RESIZE):
+def evaluate(
+    env, model, seed, NUM_EPISODES, MAX_STEPS, TASKVARS, CAMERAS, RESIZE, instruction
+):
     agent = Agent(model, CAMERAS, resize=RESIZE)
     results = {}
     for task_name in TASKVARS:
@@ -14,7 +16,9 @@ def evaluate(env, model, seed, NUM_EPISODES, MAX_STEPS, TASKVARS, CAMERAS, RESIZ
         np.random.seed(seed)
         for episode in range(NUM_EPISODES):
             try:
-                reward = run_episode(task, agent, max_steps=MAX_STEPS)
+                reward = run_episode(
+                    task, agent, max_steps=MAX_STEPS, instruction=instruction
+                )
                 results[task_name] += reward
             except Exception as e:
                 print(e)

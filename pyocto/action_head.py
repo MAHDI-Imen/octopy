@@ -22,7 +22,6 @@ class ActionHead(nn.Module):
         decoder_features: List[int],
         decoder_out_features: int,
         latent_im_size: Tuple[int, int],
-        max_steps: int,
         num_cameras: int,
     ):
         super().__init__()
@@ -30,7 +29,7 @@ class ActionHead(nn.Module):
         self.token_embedding_size = token_embedding_size
         self.latent_im_size = latent_im_size
 
-        self.step_embedding = nn.Embedding(max_steps, token_embedding_size)
+        # self.step_embedding = nn.Embedding(max_steps, token_embedding_size)
         self.cam_embedding = nn.Embedding(num_cameras, token_embedding_size)
         self.pix_embedding = nn.Embedding(
             np.prod(latent_im_size), self.token_embedding_size
@@ -96,7 +95,7 @@ class ActionHead(nn.Module):
 
         self.loss_fn = ActionLoss()
 
-    def forward(self, transformer_output, pc_obs, step_ids):
+    def forward(self, transformer_output, pc_obs):
         visual_embeddings = transformer_output["visual_embeddings"]
         enc_fts = transformer_output["enc_fts"]
 
@@ -109,7 +108,7 @@ class ActionHead(nn.Module):
 
         batch_size, n_cameras, _, im_height, im_width = pc_obs.size()
 
-        step_embeds = self.step_embedding(step_ids)  # (B, T, C)
+        # step_embeds = self.step_embedding(step_ids)  # (B, T, C)
         cam_embeds = self.cam_embedding(
             torch.arange(n_cameras).long().to(device)
         )  # (N, C)
@@ -119,7 +118,7 @@ class ActionHead(nn.Module):
 
         visual_embeddings = (
             visual_embeddings
-            + einops.rearrange(step_embeds, "b c -> b 1 1 c")
+            # + einops.rearrange(step_embeds, "b c -> b 1 1 c")
             + einops.rearrange(cam_embeds, "n c -> 1 n 1 c")
             + einops.rearrange(pix_embeds, "l c -> 1 1 l c")
         )

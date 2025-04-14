@@ -4,7 +4,9 @@ import numpy as np
 
 from pyrep.const import RenderMode
 from rlbench.action_modes.action_mode import MoveArmThenGripper
-from rlbench.action_modes.arm_action_modes import EndEffectorPoseViaPlanning
+from rlbench.action_modes.arm_action_modes import (
+    EndEffectorPoseViaPlanning,
+)
 from rlbench.action_modes.gripper_action_modes import Discrete
 from rlbench.environment import Environment
 from rlbench.observation_config import ObservationConfig
@@ -42,7 +44,9 @@ def set_up_rlbench_env(
 
     env = Environment(
         action_mode=MoveArmThenGripper(
-            arm_action_mode=EndEffectorPoseViaPlanning(collision_checking=False),
+            arm_action_mode=EndEffectorPoseViaPlanning(
+                absolute_mode=False, collision_checking=False
+            ),
             gripper_action_mode=Discrete(),
         ),
         obs_config=observation,
@@ -52,20 +56,19 @@ def set_up_rlbench_env(
     return env
 
 
-def run_episode(task, agent, max_steps):
+def run_episode(task, agent, max_steps, instruction):
     descriptions, obs = task.reset()
-    instruction = np.random.choice(descriptions)
     for step in range(max_steps):
-        action = agent.predict_action(obs, instruction, step)
-        obs, reward, terminate = task.step(action.cpu().detach())
+        action = agent.predict_action(obs, instruction)
+        obs, reward, terminate = task.step(action.cpu().detach().numpy())
         if reward > 0.0:
             break
     return reward
 
 
 if __name__ == "__main__":
-    task_name = "pick_up_cup+9"
-    env = set_up_rlbench_env(headless=True)
+    task_name = "open_drawer+0"
+    env = set_up_rlbench_env(headless=False)
     task = get_task_from_task_name(env, task_name)
     descriptions, obs = task.reset()
     print(descriptions[0])

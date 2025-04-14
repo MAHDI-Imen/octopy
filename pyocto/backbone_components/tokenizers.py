@@ -10,6 +10,9 @@ def normalize_images(img, img_norm_type="default"):
     if img_norm_type == "default":
         # put pixels in [-1, 1]
         return img.float() / 127.5 - 1.0
+    if img_norm_type == "arp":
+        # images are between [0, 1] place them in [-1, 1]
+        return img * 2 - 1
     elif img_norm_type == "imagenet":
         # put pixels in [0, 1]
         img = img.float() / 255
@@ -76,7 +79,7 @@ class SmallStem(nn.Module):
         features=(32, 96, 192, 384),
         padding=(1, 1, 1, 1),
         num_features=512,
-        img_norm_type="default",
+        img_norm_type="arp",
         **kwargs,
     ):
         super(SmallStem, self).__init__()
