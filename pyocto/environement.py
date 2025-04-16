@@ -40,12 +40,12 @@ def set_up_rlbench_env(
     observation.set_all(True)
     for cam in cameras:
         getattr(observation, f"{cam}_camera").render_mode = RenderMode.OPENGL
-        getattr(observation, f"{cam}_camera").image_size = (128, 128)
+        getattr(observation, f"{cam}_camera").image_size = (256, 256)
 
     env = Environment(
         action_mode=MoveArmThenGripper(
             arm_action_mode=EndEffectorPoseViaPlanning(
-                absolute_mode=False, collision_checking=False
+                absolute_mode=True, collision_checking=False
             ),
             gripper_action_mode=Discrete(),
         ),

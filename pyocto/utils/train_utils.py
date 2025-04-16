@@ -88,12 +88,12 @@ def set_up_logging(config, model, PROJECT_NAME, RUN_NAME, LOGGING_MODE):
     wandb.watch(model)
 
 
-def train_epoch(model, optimizer, data_loader, task_desc):
+def train_epoch(model, optimizer, data_loader, task_desc, cameras):
     average_losses = {}
     model.train()
 
     for batch in data_loader:
-        batch = extract_input(batch, task_desc)
+        batch = extract_input(batch, task_desc, cameras)
         losses, actions = model(batch, compute_loss=True)
         optimizer.zero_grad()
         losses["total"].backward()

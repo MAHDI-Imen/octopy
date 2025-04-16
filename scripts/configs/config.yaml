@@ -9,7 +9,7 @@ training:
 data: 
     task: "OpenDrawer"
     taskvars: ["open_drawer+0"]
-    task_desc: "Open the drawer"
+    task_desc: "Open bottom drawer"
     feedback_type: "demos_arp"
     cameras: [left_shoulder, right_shoulder, wrist]
     image_size: 256

@@ -53,7 +53,7 @@ def main(config: DictConfig):
     CAMERAS = config["data"]["cameras"]
     TASK_DESC = config["data"]["task_desc"]
     IM_SIZE = config["data"]["image_size"]
-    RESIZE = None if IM_SIZE == 128 else (IM_SIZE, IM_SIZE)
+    RESIZE = None if IM_SIZE == 256 else (IM_SIZE, IM_SIZE)
 
     PROJECT_NAME = config["logging"]["project_name"]
     RUN_NAME = config["logging"]["run_name"]
@@ -73,7 +73,7 @@ def main(config: DictConfig):
     # Setup Environment
     ############################################################################
     if EVALUATE:
-        env = set_up_rlbench_env(headless=True)
+        env = set_up_rlbench_env(headless=True, cameras=CAMERAS)
         env.launch()
 
     ############################################################################
@@ -152,7 +152,7 @@ def main(config: DictConfig):
 
     for epoch in pbar:
         logs = {}
-        average_losses = train_epoch(model, optimizer, data_loader, TASK_DESC)
+        average_losses = train_epoch(model, optimizer, data_loader, TASK_DESC, CAMERAS)
         logs.update(average_losses)
         pbar.set_description(f"Epoch {epoch} | Loss: {average_losses['total']:.4f}")
 

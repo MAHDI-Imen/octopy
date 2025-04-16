@@ -6,6 +6,9 @@ import torchvision.transforms as transforms
 import einops
 import numpy as np
 
+from tapas_gmm.utils.vision import construct_pointcloud_batch, construct_pointcloud
+from tapas_gmm.utils.observation import collate
+
 
 class Agent(object):
     def __init__(
@@ -44,9 +47,20 @@ class Agent(object):
 
         return action[0]
 
-    def get_batch(self, observation, task: str):
-        rgbs = self._extract_visual_input(observation, "rgb", normalize=True)
-        pcds = self._extract_visual_input(observation, "point_cloud")
+    def get_batch(self, obs, task: str):
+        rgbs = []
+        pcds = []
+        for cam in self.cameras:
+            rgb = getattr(obs, cam + "_rgb").transpose((2, 0, 1)) / 255
+            depth = getattr(obs, cam + "_depth")
+            extr = obs.misc[cam + "_camera_extrinsics"]
+            intr = obs.misc[cam + "_camera_intrinsics"].astype(float)
+            pcd = construct_pointcloud(depth, extr, intr).transpose((2, 0, 1))
+            rgbs.append(rgb)
+            pcds.append(pcd)
+
+        rgbs = torch.tensor(np.array(rgbs)).float().unsqueeze(0)
+        pcds = torch.tensor(np.array(pcds)).float().unsqueeze(0)
         task_desc = [task]
         batch = {
             "rgbs": rgbs,
@@ -54,26 +68,3 @@ class Agent(object):
             "task_desc": task_desc,
         }
         return batch
-
-    def _extract_visual_input(self, observation, visual_input: str, normalize=True):
-        visuals = [
-            getattr(observation, f"{cam}_{visual_input}") for cam in self.cameras
-        ]
-        visuals = (
-            torch.tensor(np.array(visuals)).float().permute(0, 3, 1, 2).unsqueeze(0)
-        )
-
-        # resize to 256x256
-        visuals = einops.rearrange(visuals, "t n c h w -> (t n) c h w")
-        if normalize:
-            # normalize to 0,1 range
-            visuals = visuals / 255
-
-        visuals = transforms_f.resize(
-            visuals, (256, 256), transforms.InterpolationMode.BILINEAR
-        )
-
-        # arrange back
-        visuals = einops.rearrange(visuals, "(t n) c h w -> t n c h w", t=1)
-
-        return visuals

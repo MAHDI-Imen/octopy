@@ -8,7 +8,7 @@ from pyocto.environement import set_up_rlbench_env, get_task_from_task_name
 def evaluate(
     env, model, seed, NUM_EPISODES, MAX_STEPS, TASKVARS, CAMERAS, RESIZE, instruction
 ):
-    agent = Agent(model, CAMERAS, resize=RESIZE)
+    agent = Agent(model, CAMERAS)
     results = {}
     for task_name in TASKVARS:
         results[task_name] = 0
